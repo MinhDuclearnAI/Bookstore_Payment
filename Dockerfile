@@ -13,8 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 5. Copy toàn bộ mã nguồn dự án vào container
 COPY . .
 
-# 6. Mở cổng 5000 để truy cập
-EXPOSE 5000
+# 6. Mở cổng 8000 để truy cập
+EXPOSE 8080
 
 # 7. Lệnh chạy ứng dụng khi container khởi động
 CMD ["python", "app.py"]
