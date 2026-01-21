@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống POS Mini</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <header style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 20px auto;">
+        <h1><i class="fas fa-store"></i> Hệ Thống Bán Hàng</h1>
+        <a href="/admin" style="text-decoration: none; color: white; background: #2c3e50; padding: 10px 15px; border-radius: 5px;">
+            <i class="fas fa-cog"></i> Quản lý sản phẩm
+        </a>
+    </header>
+
+    <div class="container">
+        
+        <div class="product-section">
+            <h2>Danh sách món</h2>
+            <div id="product-grid">
+                <p>Đang tải dữ liệu...</p>
+            </div>
+        </div>
+
+        <div class="cart-section">
+            
+            <div class="cart-box">
+                <h3><i class="fas fa-shopping-cart"></i> Giỏ hàng hiện tại</h3>
+                
+                <input type="text" id="customer-name" placeholder="Nhập tên khách hàng (Ví dụ: Anh Nam)" autocomplete="off">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%">Tên món</th>
+                            <th style="width: 30%">SL</th>
+                            <th style="width: 30%">Thành tiền</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-body">
+                        </tbody>
+                </table>
+
+                <div class="total-section">
+                    Tổng cộng: <span id="total-amount" style="color: #c0392b">0 ₫</span>
+                </div>
+
+                <button id="btn-pay">
+                    <i class="fas fa-print"></i> Thanh toán & Xuất hóa đơn
+                </button>
+            </div>
+
+            <div class="history-box">
+                <h3><i class="fas fa-history"></i> Giao dịch gần đây</h3>
+                <ul id="history-list">
+                    </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/static/js/pos.js"></script>
+</body>
+</html>
