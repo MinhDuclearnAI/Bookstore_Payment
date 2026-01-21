@@ -4,7 +4,6 @@ from datetime import datetime
 import json
 
 app = Flask(__name__)
-
 # --- CẤU HÌNH DATABASE (SQLite) ---
 # Dữ liệu sẽ được lưu vào file 'pos_system.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pos_system.db'
