@@ -6,56 +6,113 @@
     <title>Hệ thống POS Mini</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* CSS bổ sung riêng cho Modal (Cửa sổ bật lên chọn món) */
+        #variant-modal {
+            display: none; /* Mặc định ẩn */
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); /* Nền tối mờ */
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .modal-options button {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 12px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal-options button:hover {
+            background: #34495e;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
 
-    <header style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 20px auto;">
-        <h1><i class="fas fa-store"></i> Hệ Thống Bán Hàng</h1>
-        <a href="/admin" style="text-decoration: none; color: white; background: #2c3e50; padding: 10px 15px; border-radius: 5px;">
-            <i class="fas fa-cog"></i> Quản lý sản phẩm
+    <header style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 20px auto;">
+        <h1 style="color: #2c3e50;"><i class="fas fa-store"></i>Photocopy Hùng Mai</h1>
+        <a href="/admin" style="text-decoration: none; color: white; background: #2980b9; padding: 10px 20px; border-radius: 5px; font-weight: bold;">
+            <i class="fas fa-cogs"></i> Quản lý Sản Phẩm
         </a>
     </header>
 
     <div class="container">
         
+        <div class="category-sidebar">
+            <h3><i class="fas fa-list"></i> Danh mục</h3>
+            <ul id="category-list">
+                <li class="active">Đang tải...</li>
+            </ul>
+        </div>
+
         <div class="product-section">
-            <h2>Danh sách món</h2>
+            <h2 id="current-category-title" style="border-bottom: 2px solid #eee; padding-bottom: 10px;">Tất cả sản phẩm</h2>
+            
             <div id="product-grid">
-                <p>Đang tải dữ liệu...</p>
+                <p>Đang tải dữ liệu sản phẩm...</p>
             </div>
         </div>
 
         <div class="cart-section">
             
             <div class="cart-box">
-                <h3><i class="fas fa-shopping-cart"></i> Giỏ hàng hiện tại</h3>
+                <h3 style="color: #27ae60;"><i class="fas fa-shopping-cart"></i> Giỏ hàng</h3>
                 
-                <input type="text" id="customer-name" placeholder="Nhập tên khách hàng (Ví dụ: Anh Nam)" autocomplete="off">
+                <input type="text" id="customer-name" placeholder="Tên khách hàng (Ví dụ: Bàn 5)" autocomplete="off">
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 40%">Tên món</th>
-                            <th style="width: 30%">SL</th>
-                            <th style="width: 30%">Thành tiền</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="cart-body">
-                        </tbody>
-                </table>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 45%">Món</th>
+                                <th style="width: 25%">SL</th>
+                                <th style="width: 30%">Tiền</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-body">
+                            </tbody>
+                    </table>
+                </div>
 
                 <div class="total-section">
                     Tổng cộng: <span id="total-amount" style="color: #c0392b">0 ₫</span>
                 </div>
 
                 <button id="btn-pay">
-                    <i class="fas fa-print"></i> Thanh toán & Xuất hóa đơn
+                    <i class="fas fa-file-invoice-dollar"></i> Thanh toán & In
                 </button>
             </div>
 
-            <div class="history-box">
-                <h3><i class="fas fa-history"></i> Giao dịch gần đây</h3>
+            <div class="history-box" style="margin-top: 20px;">
+                <h3><i class="fas fa-history"></i> Gần đây</h3>
                 <ul id="history-list">
                     </ul>
             </div>
@@ -63,6 +120,33 @@
         </div>
     </div>
 
+    <div id="variant-modal">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-bottom: 20px; color: #2c3e50;">Chọn loại</h3>
+            
+            <div id="modal-options" class="modal-options"></div>
+
+            <button onclick="closeModal()" style="margin-top: 15px; background: #95a5a6; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer;">
+                Đóng lại
+            </button>
+        </div>
+    </div>
+
     <script src="/static/js/pos.js"></script>
+    
+    <script>
+        // Hàm đóng modal (được gọi từ nút Đóng hoặc khi click ra ngoài)
+        function closeModal() {
+            document.getElementById('variant-modal').style.display = 'none';
+        }
+
+        // Đóng modal khi click ra ngoài vùng trắng
+        window.onclick = function(event) {
+            const modal = document.getElementById('variant-modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>

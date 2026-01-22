@@ -1,71 +1,126 @@
 // --- BIẾN TOÀN CỤC ---
-let products = []; // Lưu danh sách sản phẩm tải về để dùng lại khi cần edit
+let products = []; // Lưu danh sách sản phẩm để xử lý cục bộ
 
 // --- KHỞI TẠO ---
 document.addEventListener('DOMContentLoaded', () => {
-    loadProducts();
+    loadProducts(); // Tải dữ liệu khi vào trang
 
-    // Gán sự kiện submit cho form thêm/sửa
+    // Gán sự kiện cho form
     const form = document.getElementById('product-form');
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
     }
 
-    // Gán sự kiện cho nút Hủy (nếu đang ở chế độ sửa mà muốn quay lại thêm mới)
-    document.getElementById('btn-cancel').addEventListener('click', resetForm);
+    // Gán sự kiện cho nút Hủy
+    const btnCancel = document.getElementById('btn-cancel');
+    if (btnCancel) {
+        btnCancel.addEventListener('click', resetForm);
+    }
 });
 
-// --- 1. TẢI DỮ LIỆU ---
+// --- 1. TẢI DỮ LIỆU TỪ SERVER ---
 async function loadProducts() {
     try {
         const response = await fetch('/api/products');
         products = await response.json();
-        renderProductTable(products);
+        
+        renderProductTable(products); // Vẽ bảng danh sách
+        updateSuggestions(products);  // Cập nhật các từ khóa gợi ý nhập liệu
     } catch (error) {
         console.error('Lỗi tải sản phẩm:', error);
-        alert('Không thể tải danh sách sản phẩm.');
+        alert('Không thể kết nối đến server!');
     }
 }
 
-// --- 2. HIỂN THỊ BẢNG SẢN PHẨM ---
+// --- 2. CẬP NHẬT GỢI Ý NHẬP LIỆU (DATALIST) ---
+function updateSuggestions(data) {
+    // Lọc lấy danh sách Mục (Category) duy nhất
+    const uniqueCategories = [...new Set(data.map(p => p.category).filter(Boolean))];
+    const catList = document.getElementById('category-suggestions');
+    catList.innerHTML = '';
+    uniqueCategories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        catList.appendChild(opt);
+    });
+
+    // Lọc lấy danh sách Dòng (Subcategory) duy nhất
+    const uniqueSubs = [...new Set(data.map(p => p.subcategory).filter(Boolean))];
+    const subList = document.getElementById('subcategory-suggestions');
+    subList.innerHTML = '';
+    uniqueSubs.forEach(sub => {
+        const opt = document.createElement('option');
+        opt.value = sub;
+        subList.appendChild(opt);
+    });
+}
+
+// --- 3. HIỂN THỊ BẢNG SẢN PHẨM ---
 function renderProductTable(data) {
     const tbody = document.getElementById('product-table-body');
     tbody.innerHTML = ''; // Xóa dữ liệu cũ
 
-    data.forEach((product, index) => {
+    // Sắp xếp: Mới nhất lên đầu (theo ID giảm dần)
+    const sortedData = [...data].sort((a, b) => b.id - a.id);
+
+    sortedData.forEach((product, index) => {
         const row = document.createElement('tr');
         
+        // Hiển thị tên + biến thể (nếu có)
+        let nameDisplay = `<strong>${product.name}</strong>`;
+        if (product.variant) {
+            nameDisplay += ` <span style="color:#e67e22; font-size:0.9em">(${product.variant})</span>`;
+        }
+
+        // Hiển thị phân loại
+        let catDisplay = product.category;
+        if (product.subcategory) {
+            catDisplay += ` <i class="fas fa-angle-right" style="font-size:0.8em; color:#ccc"></i> ${product.subcategory}`;
+        }
+
         row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${product.name}</td>
-            <td>${formatCurrency(product.price)}</td>
+            <td style="text-align: center;">${index + 1}</td>
             <td>
-                <button class="btn-edit" onclick="editProduct(${product.id})">Sửa</button>
+                ${nameDisplay}<br>
+                <small style="color:#7f8c8d">${catDisplay}</small>
+            </td>
+            <td>${formatCurrency(product.price)}</td>
+            <td style="text-align: center;">
+                <button class="btn-edit" onclick="editProduct(${product.id})">
+                    <i class="fas fa-pen"></i> Sửa
+                </button>
             </td>
         `;
         tbody.appendChild(row);
     });
 }
 
-// --- 3. XỬ LÝ FORM (THÊM / SỬA) ---
+// --- 4. XỬ LÝ FORM (THÊM / SỬA) ---
 async function handleFormSubmit(event) {
     event.preventDefault(); // Chặn load lại trang
 
-    // Lấy dữ liệu từ form
-    const idInput = document.getElementById('product-id').value; // Hidden input
-    const nameInput = document.getElementById('product-name').value;
-    const priceInput = document.getElementById('product-price').value;
+    // Lấy dữ liệu từ các ô input
+    const idInput = document.getElementById('product-id').value;
+    const name = document.getElementById('product-name').value.trim();
+    const price = document.getElementById('product-price').value;
+    const category = document.getElementById('product-category').value.trim();
+    const subcategory = document.getElementById('product-subcategory').value.trim();
+    const variant = document.getElementById('product-variant').value.trim();
 
     // Validate cơ bản
-    if (!nameInput || !priceInput) {
-        alert("Vui lòng nhập tên và giá!");
+    if (!name || !price) {
+        alert("Vui lòng nhập Tên và Giá sản phẩm!");
         return;
     }
 
+    // Tạo payload gửi lên server
     const payload = {
-        id: idInput ? parseInt(idInput) : null, // Nếu có ID là Sửa, không có là Thêm
-        name: nameInput,
-        price: parseFloat(priceInput)
+        id: idInput ? parseInt(idInput) : null, // Nếu có ID là Sửa, không là Thêm
+        name: name,
+        price: parseFloat(price),
+        category: category,
+        subcategory: subcategory,
+        variant: variant
     };
 
     try {
@@ -79,45 +134,49 @@ async function handleFormSubmit(event) {
 
         if (result.success) {
             alert(result.message);
-            resetForm();    // Xóa form về trắng
-            loadProducts(); // Tải lại bảng dữ liệu mới
+            resetForm();    // Xóa trắng form
+            loadProducts(); // Tải lại bảng để thấy thay đổi
         } else {
-            alert('Lỗi: ' + result.message);
+            alert('Lỗi server: ' + result.message);
         }
 
     } catch (error) {
-        console.error('Lỗi lưu sản phẩm:', error);
-        alert('Lỗi kết nối đến server.');
+        console.error(error);
+        alert('Lỗi kết nối!');
     }
 }
 
-// --- 4. CHỨC NĂNG SỬA (Đổ dữ liệu lên form) ---
+// --- 5. CHỨC NĂNG SỬA (ĐỔ DỮ LIỆU LÊN FORM) ---
 function editProduct(id) {
-    // Tìm sản phẩm trong biến toàn cục
     const product = products.find(p => p.id === id);
     if (!product) return;
 
-    // Đổ dữ liệu vào các ô input
+    // Điền dữ liệu vào form
     document.getElementById('product-id').value = product.id;
     document.getElementById('product-name').value = product.name;
     document.getElementById('product-price').value = product.price;
+    document.getElementById('product-category').value = product.category || "";
+    document.getElementById('product-subcategory').value = product.subcategory || "";
+    document.getElementById('product-variant').value = product.variant || "";
 
-    // Đổi nút "Thêm mới" thành "Lưu thay đổi" & Hiện nút Hủy
-    document.getElementById('form-title').innerText = "Sửa sản phẩm";
-    document.getElementById('btn-submit').innerText = "Lưu thay đổi";
+    // Đổi giao diện sang chế độ "Sửa"
+    document.getElementById('form-title').innerHTML = `<i class="fas fa-edit"></i> Sửa sản phẩm: ${product.name}`;
+    document.getElementById('btn-submit').innerHTML = `<i class="fas fa-save"></i> Lưu thay đổi`;
     document.getElementById('btn-cancel').style.display = "inline-block";
+    
+    // Cuộn trang lên đầu để nhập liệu
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// --- 5. CHỨC NĂNG RESET FORM ---
+// --- 6. RESET FORM (QUAY VỀ CHẾ ĐỘ THÊM MỚI) ---
 function resetForm() {
-    // Xóa sạch các ô input
-    document.getElementById('product-id').value = '';
-    document.getElementById('product-name').value = '';
-    document.getElementById('product-price').value = '';
+    // Xóa sạch input
+    document.getElementById('product-form').reset();
+    document.getElementById('product-id').value = ''; // Quan trọng: Xóa ID ẩn
 
-    // Đưa giao diện về trạng thái "Thêm mới"
-    document.getElementById('form-title').innerText = "Thêm sản phẩm mới";
-    document.getElementById('btn-submit').innerText = "Thêm mới";
+    // Đổi giao diện về chế độ "Thêm mới"
+    document.getElementById('form-title').innerHTML = `<i class="fas fa-plus-circle"></i> Thêm sản phẩm mới`;
+    document.getElementById('btn-submit').innerHTML = `<i class="fas fa-plus"></i> Thêm sản phẩm`;
     document.getElementById('btn-cancel').style.display = "none";
 }
 

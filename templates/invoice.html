@@ -5,171 +5,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hóa đơn #{{ order.id }}</title>
     <style>
+        /* --- CSS CHO GIAO DIỆN XEM TRÊN MÁY TÍNH --- */
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            color: #555;
-            background: #eee;
+            background-color: #f4f4f4;
+            color: #333;
             padding: 20px;
         }
 
-        /* Khung hóa đơn mô phỏng tờ giấy */
         .invoice-box {
             max-width: 800px;
             margin: auto;
             padding: 30px;
-            border: 1px solid #eee;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
             background: #fff;
+            border: 1px solid #eee;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
             font-size: 16px;
             line-height: 24px;
         }
 
-        /* Tiêu đề bảng */
-        .invoice-box table {
+        /* Nút chức năng (sẽ ẩn khi in) */
+        .action-bar {
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            text-align: right;
+        }
+        
+        .btn {
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            display: inline-block;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-print { background-color: #2980b9; color: white; }
+        .btn-back { background-color: #95a5a6; color: white; margin-right: 10px; }
+
+        /* Cấu trúc bảng hóa đơn */
+        table {
             width: 100%;
             line-height: inherit;
             text-align: left;
             border-collapse: collapse;
         }
 
-        .invoice-box table td {
-            padding: 5px;
-            vertical-align: top;
-        }
+        table td { padding: 8px; vertical-align: top; }
+        
+        /* Căn chỉnh cột tiền */
+        table tr td:nth-child(2) { text-align: center; } /* SL */
+        table tr td:nth-child(3), table tr td:nth-child(4) { text-align: right; } /* Giá */
 
-        /* Căn phải cho cột tiền */
-        .invoice-box table tr td:nth-child(3),
-        .invoice-box table tr td:nth-child(4) {
-            text-align: right;
-        }
+        /* Header hóa đơn */
+        .header-row td { padding-bottom: 20px; }
+        .shop-title { font-size: 28px; font-weight: bold; color: #2c3e50; }
+        .invoice-details { text-align: right; }
 
-        /* Header (Logo và thông tin shop) */
-        .title {
-            font-size: 45px;
-            line-height: 45px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        /* Dòng tổng tiền */
-        .total-row {
-            border-top: 2px solid #eee;
+        /* Tiêu đề bảng */
+        .heading-row td {
+            background: #eee;
+            border-bottom: 1px solid #ddd;
             font-weight: bold;
         }
 
-        /* CSS CHUYÊN DỤNG CHO MÁY IN */
+        /* Dòng sản phẩm */
+        .item-row td { border-bottom: 1px solid #eee; }
+        
+        /* Dòng tổng tiền */
+        .total-row td {
+            border-top: 2px solid #333;
+            font-weight: bold;
+            padding-top: 15px;
+        }
+        .total-amount { font-size: 1.4em; color: #c0392b; }
+
+        /* --- CSS CHUYÊN DỤNG CHO MÁY IN (QUAN TRỌNG) --- */
         @media print {
-            body {
-                background: none;
+            body { background: none; padding: 0; }
+            .invoice-box { 
+                box-shadow: none; 
+                border: none; 
+                width: 100%; 
+                max-width: 100%; 
                 padding: 0;
             }
-            .invoice-box {
-                box-shadow: none;
-                border: none;
-                width: 100%;
-                max-width: 100%;
-            }
-            /* Ẩn nút in khi in ra giấy */
-            .no-print {
-                display: none;
-            }
-        }
-
-        /* Nút in trên màn hình */
-        .btn-print {
-            background-color: #2980b9;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            display: inline-block;
-            margin-bottom: 20px;
-            cursor: pointer;
-            border: none;
+            .action-bar { display: none; } /* Ẩn nút bấm khi in */
         }
     </style>
 </head>
 <body>
 
-    <div style="text-align: center;" class="no-print">
-        <button onclick="window.print()" class="btn-print">🖨️ In Hóa Đơn Ngay</button>
-        <a href="/" style="margin-left: 20px; text-decoration: none; color: #555;">← Quay lại bán hàng</a>
+    <div class="action-bar">
+        <a href="/" class="btn btn-back">← Quay lại bán hàng</a>
+        <button onclick="window.print()" class="btn btn-print">🖨️ In Hóa Đơn</button>
     </div>
 
     <div class="invoice-box">
         <table cellpadding="0" cellspacing="0">
-            <tr class="top">
-                <td colspan="4">
-                    <table>
-                        <tr>
-                            <td class="title">
-                                SHOP ABC
-                            </td>
-                            
-                            <td style="text-align: right;">
-                                Mã hóa đơn: <strong>#{{ order.id }}</strong><br>
-                                Ngày: {{ order.created_at }}<br>
-                            </td>
-                        </tr>
-                    </table>
+            
+            <tr class="header-row">
+                <td colspan="2">
+                    <div class="shop-title">Photocopy Hùng Mai</div>
+                    <div>433 Đường Lê Thái Tông, Lam Sơn, Thanh Hóa</div>
+                    <div>Hotline: 0932.351.802</div>
+                </td>
+                <td colspan="2" class="invoice-details">
+                    Mã đơn: <strong>#{{ order.id }}</strong><br>
+                    Ngày: {{ order.created_at }}<br>
+                    Khách hàng: <strong>{{ order.customer_name }}</strong>
                 </td>
             </tr>
 
-            <tr class="information">
-                <td colspan="4">
-                    <table>
-                        <tr>
-                            <td>
-                                Địa chỉ: 123 Đường ABC<br>
-                                Hà Nội, Việt Nam<br>
-                                Hotline: 0912.345.678
-                            </td>
-                            
-                            <td style="text-align: right;">
-                                Khách hàng:<br>
-                                <strong>{{ order.customer_name }}</strong>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-
-            <tr style="background-color: #eee; font-weight: bold;">
-                <td>Món ăn</td>
-                <td style="text-align: center;">SL</td>
-                <td>Đơn giá</td>
-                <td>Thành tiền</td>
+            <tr class="heading-row">
+                <td style="width: 40%">Tên sản phẩm / Loại</td>
+                <td style="width: 15%">SL</td>
+                <td style="width: 20%">Đơn giá</td>
+                <td style="width: 25%">Thành tiền</td>
             </tr>
 
             {% for item in items %}
-            <tr class="item">
-                <td>{{ item.name }}</td>
-                <td style="text-align: center;">{{ item.quantity }}</td>
-                <td>{{ "{:,.0f}".format(item.price).replace(',', '.') }} ₫</td>
-                <td>{{ "{:,.0f}".format(item.total).replace(',', '.') }} ₫</td>
+            <tr class="item-row">
+                <td>
+                    {{ item.name }}
+                </td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ "{:,.0f}".format(item.price).replace(',', '.') }}</td>
+                <td>{{ "{:,.0f}".format(item.total).replace(',', '.') }}</td>
             </tr>
             {% endfor %}
 
             <tr class="total-row">
-                <td colspan="3" style="text-align: right; padding-top: 20px;">TỔNG CỘNG:</td>
-                <td style="padding-top: 20px; color: #c0392b; font-size: 1.2em;">
-                    {{ "{:,.0f}".format(order.total_amount).replace(',', '.') }} ₫
+                <td colspan="3" style="text-align: right;">TỔNG THANH TOÁN:</td>
+                <td class="total-amount">
+                    {{ "{:,.0f}".format(order.total_amount).replace(',', '.') }} đ
                 </td>
             </tr>
         </table>
 
-        <div style="margin-top: 40px; text-align: center; font-style: italic; color: #888;">
-            <p>Cảm ơn quý khách đã mua hàng!</p>
-            <p>Hẹn gặp lại.</p>
+        <div style="margin-top: 40px; text-align: center; font-style: italic; color: #777;">
+            <p>Cảm ơn quý khách đã ủng hộ!</p>
+            <p>Pass wifi: 12345678</p>
         </div>
     </div>
 
     <script>
-        // Tự động bật cửa sổ in khi trang tải xong (Tùy chọn)
-        window.onload = function() {
-             // Bỏ comment dòng dưới nếu muốn tự động in luôn không cần bấm nút
-             // window.print(); 
-        };
+        // Tùy chọn: Tự động bật hộp thoại in khi vừa tải trang xong
+        // window.onload = function() { window.print(); }
     </script>
 </body>
 </html>
